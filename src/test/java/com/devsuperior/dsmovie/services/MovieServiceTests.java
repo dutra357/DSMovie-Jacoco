@@ -71,8 +71,6 @@ public class MovieServiceTests {
 		Mockito.when(repository.existsById(dependentId)).thenReturn(true);
 
 		Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
-
-
 	}
 
 	@Test
