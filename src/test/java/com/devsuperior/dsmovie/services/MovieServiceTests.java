@@ -3,6 +3,7 @@ package com.devsuperior.dsmovie.services;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.DatabaseException;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,6 +15,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +40,7 @@ public class MovieServiceTests {
 	private PageImpl<MovieEntity> page;
 	private MovieEntity movie;
 	private MovieDTO movieDto;
-	private Long existsId, nonExistsId;
+	private Long existsId, nonExistsId, dependentId;
 
 
 	@BeforeEach
@@ -51,6 +53,7 @@ public class MovieServiceTests {
 
 		existsId = 1L;
 		nonExistsId = 888L;
+		dependentId = 1000L;
 
 		Mockito.when(repository.searchByTitle(ArgumentMatchers.any(), (Pageable) ArgumentMatchers.any()))
 				.thenReturn(page);
@@ -63,6 +66,11 @@ public class MovieServiceTests {
 		Mockito.when(repository.getReferenceById(existsId)).thenReturn(movie);
 		Mockito.when(repository.getReferenceById(nonExistsId)).thenThrow(EntityNotFoundException.class);
 
+		Mockito.when(repository.existsById(existsId)).thenReturn(true);
+		Mockito.when(repository.existsById(nonExistsId)).thenReturn(false);
+		Mockito.when(repository.existsById(dependentId)).thenReturn(true);
+
+		Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 
 
 	}
@@ -125,13 +133,30 @@ public class MovieServiceTests {
 	
 	@Test
 	public void deleteShouldDoNothingWhenIdExists() {
+		Assertions.assertDoesNotThrow(() -> {
+			service.delete(existsId);
+		});
+
+		Mockito.verify(repository, Mockito.times(1)).deleteById(existsId);
 	}
 	
 	@Test
 	public void deleteShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+		Assertions.assertThrows(ResourceNotFoundException.class, () -> {
+			service.delete(nonExistsId);
+		});
+
+		Mockito.verify(repository, Mockito.times(1)).existsById(nonExistsId);
+		Mockito.verify(repository, Mockito.times(0)).deleteById(nonExistsId);
 	}
 	
 	@Test
 	public void deleteShouldThrowDatabaseExceptionWhenDependentId() {
+		Assertions.assertThrows(DatabaseException.class, () -> {
+			service.delete(dependentId);
+		});
+
+		Mockito.verify(repository, Mockito.times(1)).existsById(dependentId);
+		Mockito.verify(repository, Mockito.times(1)).deleteById(dependentId);
 	}
 }
