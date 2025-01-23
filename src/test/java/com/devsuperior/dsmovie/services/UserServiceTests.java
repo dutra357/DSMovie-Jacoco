@@ -1,6 +1,7 @@
 package com.devsuperior.dsmovie.services;
 
 import com.devsuperior.dsmovie.entities.UserEntity;
+import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 import com.devsuperior.dsmovie.repositories.UserRepository;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -39,17 +41,22 @@ public class UserServiceTests {
 	private CustomUserUtil userUtil;
 
 	private UserEntity user;
-	private String validUsername, invalidusername;
+	private String validUsername, invalidUsername;
+	List<UserDetailsProjection> detailsList;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		user = UserFactory.createUserEntity();
 
 		validUsername = "maria@gmail.com";
-		invalidusername = "joao@invalid.com";
+		invalidUsername = "joao@invalid.com";
+		detailsList = List.of();
 
 		Mockito.when(userRepository.findByUsername(validUsername)).thenReturn(Optional.ofNullable(user));
-		Mockito.when(userRepository.findByUsername(invalidusername)).thenReturn(Optional.empty());
+		Mockito.when(userRepository.findByUsername(invalidUsername)).thenReturn(Optional.empty());
+
+		//Mockito.when(userRepository.searchUserAndRolesByUsername(validUsername)).thenReturn();
+		Mockito.when(userRepository.searchUserAndRolesByUsername(invalidUsername)).thenReturn(detailsList);
 
 	}
 
@@ -67,7 +74,7 @@ public class UserServiceTests {
 
 	@Test
 	public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
-		Mockito.when(userUtil.getLoggedUsername()).thenReturn(invalidusername);
+		Mockito.when(userUtil.getLoggedUsername()).thenReturn(invalidUsername);
 
 		Assertions.assertThrows(UsernameNotFoundException.class, () -> {
 			UserEntity result = service.authenticated();
@@ -76,7 +83,7 @@ public class UserServiceTests {
 		});
 
 		Mockito.verify(userUtil, Mockito.times(1)).getLoggedUsername();
-		Mockito.verify(userRepository, Mockito.times(1)).findByUsername(invalidusername);
+		Mockito.verify(userRepository, Mockito.times(1)).findByUsername(invalidUsername);
 	}
 
 	@Test
@@ -85,5 +92,13 @@ public class UserServiceTests {
 
 	@Test
 	public void loadUserByUsernameShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
+
+		Assertions.assertThrows(UsernameNotFoundException.class, () -> {
+			UserDetails result = service.loadUserByUsername(invalidUsername);
+
+			Assertions.assertNull(result);
+		});
+
+		Mockito.verify(userRepository, Mockito.times(1)).searchUserAndRolesByUsername(invalidUsername);
 	}
 }
