@@ -57,6 +57,8 @@ public class ScoreServiceTests {
 		existsId = 1L;
 		nonExistsId = 99L;
 
+		movie.getScores().add(ScoreFactory.createScoreEntity());
+
 		Mockito.when(movieRepository.findById(existsId)).thenReturn(Optional.ofNullable(movie));
 		Mockito.when(movieRepository.findById(nonExistsId)).thenReturn(Optional.empty());
 
