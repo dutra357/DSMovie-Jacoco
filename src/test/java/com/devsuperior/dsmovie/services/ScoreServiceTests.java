@@ -7,12 +7,10 @@ import com.devsuperior.dsmovie.entities.ScoreEntity;
 import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
 import com.devsuperior.dsmovie.repositories.ScoreRepository;
-import com.devsuperior.dsmovie.repositories.UserRepository;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import com.devsuperior.dsmovie.tests.ScoreFactory;
 import com.devsuperior.dsmovie.tests.UserFactory;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,14 +19,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.times;
@@ -73,9 +65,6 @@ public class ScoreServiceTests {
 		Mockito.when(scoreRepository.saveAndFlush(ArgumentMatchers.any())).thenReturn(score);
 
 		Mockito.when(movieRepository.save(ArgumentMatchers.any())).thenReturn(movie);
-
-
-
 	}
 	
 	@Test
@@ -88,7 +77,6 @@ public class ScoreServiceTests {
 
 		Mockito.verify(movieRepository, times(1)).findById(scoreDTO.getMovieId());
 		Mockito.verify(scoreRepository, times(1)).saveAndFlush(ArgumentMatchers.any());
-
 	}
 	
 	@Test
