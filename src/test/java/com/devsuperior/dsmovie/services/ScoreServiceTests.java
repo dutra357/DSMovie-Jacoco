@@ -84,6 +84,7 @@ public class ScoreServiceTests {
 
 		Assertions.assertNotNull(result);
 		Assertions.assertEquals(scoreDTO.getMovieId(), result.getId());
+		Assertions.assertEquals("Test Movie", result.getTitle());
 
 		Mockito.verify(movieRepository, times(1)).findById(scoreDTO.getMovieId());
 		Mockito.verify(scoreRepository, times(1)).saveAndFlush(ArgumentMatchers.any());
